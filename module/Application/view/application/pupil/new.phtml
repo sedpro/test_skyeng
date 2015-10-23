@@ -1,0 +1,19 @@
+<?php echo $this->headScript()->appendFile($this->basePath() . '/js/bootstrap-datepicker.js'); ?>
+<?php echo $this->headLink()->appendStylesheet($this->basePath() . '/css/bootstrap-datepicker.css');?>
+<?php $title = 'Add a pupil';?>
+<?php $this->headTitle($title); ?>
+
+<h1><?php echo $title;?></h1>
+
+<?php echo $this->partial('partial/form', ['form' => $this->form]);?>
+
+<script>
+    $(function () {
+        var picker = $('.datepicker').datepicker({
+            format: 'yyyy-mm-dd',
+            weekStart: 1
+        }).on('changeDate', function(ev) {
+            picker.hide();
+        }).data('datepicker');
+    });
+</script>

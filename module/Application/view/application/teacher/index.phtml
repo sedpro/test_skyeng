@@ -1,0 +1,7 @@
+<?php $title = 'Teachers';?>
+<?php $this->headTitle($title);?>
+<h1><?php echo $title;?></h1>
+
+<?php echo $this->partial('partial/teachers', ['items' => $this->items, 'pupils' => $this->pupils]);?>
+
+<?php echo $this->paginationControl($this->paginator, 'Sliding', 'application/teacher/pagination', ['route'=>'teachers']); ?>

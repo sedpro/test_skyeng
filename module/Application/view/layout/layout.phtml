@@ -1,0 +1,48 @@
+<?php echo $this->doctype(); ?>
+
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <?php echo $this->headTitle('test')->setSeparator(' - ')->setAutoEscape(false) ?>
+
+        <?php echo $this->headMeta()
+            ->appendName('viewport', 'width=device-width, initial-scale=1.0')
+            ->appendHttpEquiv('X-UA-Compatible', 'IE=edge')
+        ; ?>
+
+        <?php echo $this->headLink()
+            ->prependStylesheet($this->basePath('css/style.css'))
+            ->prependStylesheet($this->basePath('css/bootstrap-theme.min.css'))
+            ->prependStylesheet($this->basePath('css/bootstrap.min.css'))
+        ; ?>
+
+        <?php echo $this->headScript()
+            ->prependFile($this->basePath('js/bootstrap.min.js'))
+            ->prependFile($this->basePath('js/jquery.min.js'))
+            ->prependFile($this->basePath('js/respond.min.js'), 'text/javascript', array('conditional' => 'lt IE 9',))
+            ->prependFile($this->basePath('js/html5shiv.min.js'),   'text/javascript', array('conditional' => 'lt IE 9',))
+        ; ?>
+
+    </head>
+    <body>
+
+    <div class="container-fluid">
+
+        <div class="row-fluid"><div class="col-md-12">
+            <nav class="nav nav-tabs" role="navigation">
+                <?php echo $this->navigation('navigation')->menu()->setUlClass('nav navbar-nav'); ?>
+            </nav>
+        </div> </div>
+
+        <div class="row-fluid">
+            <div class="col-md-12">
+                <?php echo $this->showMessages();?>
+                <?php echo $this->content; ?>
+            </div>
+        </div>
+    </div>
+
+    <?php echo $this->inlineScript() ?>
+
+    </body>
+</html>

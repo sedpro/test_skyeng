@@ -1,0 +1,55 @@
+<?php echo $this->headScript()->appendFile($this->basePath() . '/js/jquery.autocomplete.js'); ?>
+<?php $title = 'Teacher - ' . $teacher->name;?>
+<?php $this->headTitle($title); ?>
+
+<h1><?php echo $title;?></h1>
+
+<h3>Add a pupil:</h3>
+
+<div class="form-group">
+    <input type="text" class="form-control" name="q" id="query">
+</div>
+
+<h3>Pupils:</h3>
+<ul class="list-group">
+    <?php foreach($pupils as $pupil) :?>
+        <?php echo $this->partial('application/teacher/pupil_item', ['pupil' => $pupil]);?>
+    <?php endforeach;?>
+</ul>
+
+<script>
+
+    $(function () {
+        $('body').on('click', '.unlink_action', function(e) {
+            e.preventDefault();
+            var self = $(this);
+            self.removeClass('unlink_action')
+                .find('span').removeClass('glyphicon-remove');
+            $.post('/ajax/unlink', {
+                pupil_id: self.data('pupil_id'),
+                teacher_id: <?php echo $teacher->id;?>
+            }, function(data) {
+                if (data.success) {
+                    self.parent().remove();
+                }
+            }, 'json');
+        });
+
+        $('#query').autocomplete({
+            serviceUrl: '/ajax/autocomplete/<?php echo $teacher->id;?>',
+            maxHeight: 400,
+            noCache: true,
+            onSelect: function(data) {
+                $.post('/ajax/link', {
+                    pupil_id: data.pupil_id,
+                    teacher_id: <?php echo $teacher->id;?>
+                }, function( data ) {
+                    if (data.success) {
+                        $('input#query').val('');
+                        $('.list-group').prepend(data.html);
+                    }
+                }, 'json');
+            }
+        });
+    });
+</script>

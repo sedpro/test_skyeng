@@ -1,0 +1,9 @@
+<?php $title = 'Teachers, who have most common pupils'?>
+<?php $this->headTitle($title);?>
+<h1><?php echo $title;?></h1>
+
+<h3>Teachers:</h3>
+<?php echo $this->partial('partial/teachers', ['items' => $this->teachers]);?>
+
+<h3>Pupils:</h3>
+<?php echo $this->partial('partial/pupils', ['items' => $this->pupils]);?>
