@@ -57,7 +57,7 @@ return array(
             'teacher_max' => array(
                 'type' => \Zend\Mvc\Router\Http\Literal::class,
                 'options' => array(
-                    'route'    => '/teacher/max/',
+                    'route'    => '/teacher/max',
                     'defaults' => array(
                         'controller' => 'Application\Controller\Teacher',
                         'action'     => 'max',
