@@ -4,6 +4,10 @@ vendor/
 
 # Local configs
 config/autoload/*.local.php
+config/autoload/local.php
+
+# PhpStorm
+.idea
 
 # Binary gettext files
 *.mo
