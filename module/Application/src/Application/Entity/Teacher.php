@@ -29,11 +29,10 @@ class Teacher extends Simple implements EntityInterface
     public $gender;
     public $phone;
 
-    public function randomize()
+    public function setName($name)
     {
-        $this->name = \Application\Helper\Randomizer::getRandomName();
-        $this->gender = $this->genders[mt_rand(0, 1)];
-        $this->phone = \Application\Helper\Randomizer::getRandomPhone();
+        $this->name = $name;
+        return $this;
     }
 
     public function getName()
@@ -41,9 +40,21 @@ class Teacher extends Simple implements EntityInterface
         return $this->name;
     }
 
+    public function setGender($gender)
+    {
+        $this->gender = $gender;
+        return $this;
+    }
+
     public function getGender()
     {
         return self::$gender_text[$this->gender];
+    }
+
+    public function setPhone($phone)
+    {
+        $this->phone = $phone;
+        return $this;
     }
 
     public function getPhone()

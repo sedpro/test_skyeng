@@ -22,6 +22,8 @@ class CliController extends AbstractActionController
     {
         Time::check();
 
+        $nameGenerator = new \NameGenerator\Generator;
+
         $this->createTables();
 
         $teachersCount = $this->getRequest()->getParam('teachers', 10000);
@@ -38,10 +40,37 @@ class CliController extends AbstractActionController
 
         Console::getInstance()->writeLine('Tables created in ' . Time::check() . ' sec.');
 
-        $this->generate($pupilTable, $pupilsCount);
+        $pupils = $nameGenerator->get($pupilsCount, ['email', 'birthday']);
+        foreach ($pupils as $randomPupil) {
+            $level = \Application\Entity\Pupil::$levels[rand(0, count(\Application\Entity\Pupil::$levels)-1)];
+
+            /** @var \Application\Entity\Pupil $pupil */
+            $pupil = $pupilTable->getEntity();
+            $pupil
+                ->setName($randomPupil['first'] . ' ' . $randomPupil['last'])
+                ->setEmail($randomPupil['email'])
+                ->setBirthday($randomPupil['birthday'])
+                ->setLevel($level);
+            $pupilTable->insert($pupil);
+        }
+
         Console::getInstance()->writeLine($pupilsCount . ' pupils generated in ' . Time::check() . ' sec.');
 
-        $this->generate($teacherTable, $teachersCount);
+        $teachers = $nameGenerator->get($teachersCount, ['phone']);
+        foreach ($teachers as $randomTeacher) {
+            $gender = $randomTeacher['gender'] == \NameGenerator\Gender::GENDER_MALE
+                ? \Application\Entity\Teacher::GENDER_MALE
+                : \Application\Entity\Teacher::GENDER_FEMALE;
+
+            /** @var \Application\Entity\Teacher $teacher */
+            $teacher = $teacherTable->getEntity();
+            $teacher
+                ->setName($randomTeacher['first'] . ' ' . $randomTeacher['last'])
+                ->setGender($gender)
+                ->setPhone($randomTeacher['phone']);
+            $teacherTable->insert($teacher);
+        }
+
         Console::getInstance()->writeLine($teachersCount . ' teachers generated in ' . Time::check() . ' sec.');
 
         $pupilMaxId = $pupilTable->getMaxId();
@@ -65,21 +94,6 @@ class CliController extends AbstractActionController
             }
         }
         Console::getInstance()->writeLine($linksCount . ' links generated in ' . Time::check() . ' sec.');
-    }
-
-    /**
-     * inserts into $table table $count dummy rows
-     *
-     * @param $table \Application\Entity\EntityInterface
-     * @param $count int
-     */
-    private function generate($table, $count)
-    {
-        for($i = 0; $i < $count; $i++) {
-            $entity = $table->getEntity();
-            $entity->randomize();
-            $table->insert($entity);
-        }
     }
 
     /**

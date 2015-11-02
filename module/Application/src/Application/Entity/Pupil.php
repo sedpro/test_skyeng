@@ -19,7 +19,7 @@ class Pupil extends Simple implements EntityInterface
     const LEVEL_C1 = 'c1';
     const LEVEL_C2 = 'c2';
 
-    public $levels = [
+    public static $levels = [
         self::LEVEL_A1,
         self::LEVEL_A2,
         self::LEVEL_B1,
@@ -42,15 +42,10 @@ class Pupil extends Simple implements EntityInterface
     public $birthday;
     public $level;
 
-    /**
-     * Fills the entity with random data
-     */
-    public function randomize()
+    public function setName($name)
     {
-        $this->name = \Application\Helper\Randomizer::getRandomName();
-        $this->email = \Application\Helper\Randomizer::getRandomEmail();
-        $this->birthday = \Application\Helper\Randomizer::getRandomDate();
-        $this->level = $this->levels[mt_rand(0, 5)];
+        $this->name = $name;
+        return $this;
     }
 
     public function getName()
@@ -58,14 +53,32 @@ class Pupil extends Simple implements EntityInterface
         return $this->name;
     }
 
+    public function setEmail($email)
+    {
+        $this->email = $email;
+        return $this;
+    }
+
     public function getEmail()
     {
         return $this->email;
     }
 
+    public function setBirthday($birthday)
+    {
+        $this->birthday = $birthday;
+        return $this;
+    }
+
     public function getBirthday()
     {
         return $this->birthday;
+    }
+
+    public function setLevel($level)
+    {
+        $this->level = $level;
+        return $this;
     }
 
     public function getLevel()
