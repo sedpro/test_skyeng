@@ -27,7 +27,7 @@ class PupilController extends AbstractActionController
             if ($form->isValid()) {
                 $values = $form->getData();
 
-                $this->getPupilTable()->insertFromForm($values);
+                $this->getPupilService()->insert($values);
 
                 $this->flashMessenger()->addSuccessMessage('New pupil successfully added.');
 
@@ -55,8 +55,8 @@ class PupilController extends AbstractActionController
 
         $teacher_id = $this->params()->fromRoute('teacher_id');
 
-        $pupilTable = $this->getPupilTable();
-        $currentPupils = $pupilTable->getPupilsByTeacherIds($teacher_id);
+        $pupilService = $this->getPupilService();
+        $currentPupils = $pupilService->getByTeacherIds($teacher_id);
         $currentPupilIds = [];
         foreach ($currentPupils as $pupil) {
             $currentPupilIds[] = $pupil->id;
@@ -64,12 +64,12 @@ class PupilController extends AbstractActionController
 
         $query = $this->params()->fromQuery('query');
         if ($query) {
-            $pupils = $pupilTable->getByFirstLettersOfName($query, $maxSuggestions, $currentPupilIds);
+            $pupils = $pupilService->getByFirstLettersOfName($query, $maxSuggestions, $currentPupilIds);
 
             foreach ($pupils as $pupil) {
                 $suggestions[] = [
-                    'value' => $pupil['name'],
-                    'pupil_id' => $pupil['id'],
+                    'value' => $pupil->name,
+                    'pupil_id' => $pupil->id,
                 ];
             }
         }
@@ -81,10 +81,10 @@ class PupilController extends AbstractActionController
     }
 
     /**
-     * @return \Application\Model\Pupil
+     * @return \Application\Service\Pupil
      */
-    private function getPupilTable()
+    private function getPupilService()
     {
-        return $this->getServiceLocator()->get('PupilTable');
+        return $this->getServiceLocator()->get('PupilService');
     }
 }

@@ -1,5 +1,5 @@
 <?php
-namespace Application\View\Helper;
+namespace App\View\Helper;
 
 use Zend\View\Helper\AbstractHelper;
 use Zend\View\Helper\FlashMessenger;

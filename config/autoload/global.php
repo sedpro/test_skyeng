@@ -22,4 +22,13 @@ return array(
             \PDO::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES \'UTF8\''
         ],
     ],
+    'storaged' => [
+//        'author' => [
+//            'alias' => 'author',
+//        ],
+//
+        \Application\Storage\Mysql\Pupil::$alias,
+        \Application\Storage\Mysql\Teacher::$alias,
+        \Application\Storage\Mysql\TeacherPupil::$alias,
+    ],
 );

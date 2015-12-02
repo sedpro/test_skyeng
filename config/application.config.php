@@ -8,6 +8,7 @@
 return array(
     'modules' => array(
         'Application',
+        'App',
     ),
 
     'module_listener_options' => array(

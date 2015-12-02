@@ -1,81 +1,66 @@
 <?php
-/**
- * Zend Framework (http://framework.zend.com/)
- *
- * @link      http://github.com/zendframework/ZendSkeletonApplication for the canonical source repository
- * @copyright Copyright (c) 2005-2015 Zend Technologies USA Inc. (http://www.zend.com)
- * @license   http://framework.zend.com/license/new-bsd New BSD License
- */
 
 namespace Application\Controller;
 
 use Zend\Mvc\Controller\AbstractActionController;
 use Zend\Console\Console;
-use \Application\Helper\Time;
+use App\Helper\Time;
+use Application\Entity\Teacher as TeacherEntity;
 
 class CliController extends AbstractActionController
 {
+    const CHUNK_SIZE = 1000;
+
     /**
-     * Creates all needed classes and filles them with dummie data
+     * Creates all needed classes and fills them with random data
      */
     public function installAction()
     {
         Time::check();
 
-        $nameGenerator = new \NameGenerator\Generator;
-
         $this->createTables();
-
-        $teachersCount = $this->getRequest()->getParam('teachers', 10000);
-        $pupilsCount = $this->getRequest()->getParam('pupils', 100000);
-
-        /** @var \Application\Model\Teacher $teacherTable */
-        $teacherTable = $this->getServiceLocator()->get('TeacherTable');
-
-        /** @var \Application\Model\Pupil $pupilTable */
-        $pupilTable = $this->getServiceLocator()->get('PupilTable');
-
-        /** @var \Application\Model\TeacherPupil $teacherPupilTable */
-        $teacherPupilTable = $this->getServiceLocator()->get('TeacherPupilTable');
-
         Console::getInstance()->writeLine('Tables created in ' . Time::check() . ' sec.');
 
-        $pupils = $nameGenerator->get($pupilsCount, ['email', 'birthday']);
-        foreach ($pupils as $randomPupil) {
-            $level = \Application\Entity\Pupil::$levels[rand(0, count(\Application\Entity\Pupil::$levels)-1)];
+        $pupilService = $this->getPupilService();
+        $count = $this->generateItems(
+            $pupilService,
+            $this->getRequest()->getParam('pupils', 100000),
+            ['email', 'birthday'],
+            function ($item) {
+                return [
+                    'name' => $item['full'],
+                    'email' => $item['email'],
+                    'birthday' => $item['birthday'],
+                    'level' => \Application\Entity\Pupil::$levels[rand(0, 5)],
+                ];
+            }
+        );
+        Console::getInstance()->writeLine($count . ' pupils generated in ' . Time::check() . ' sec.');
 
-            /** @var \Application\Entity\Pupil $pupil */
-            $pupil = $pupilTable->getEntity();
-            $pupil
-                ->setName($randomPupil['first'] . ' ' . $randomPupil['last'])
-                ->setEmail($randomPupil['email'])
-                ->setBirthday($randomPupil['birthday'])
-                ->setLevel($level);
-            $pupilTable->insert($pupil);
-        }
+        $teachersCount = $this->getRequest()->getParam('teachers', 10000);
+        $teacherService = $this->getTeacherService();
+        $this->generateItems(
+            $teacherService,
+            $teachersCount,
+            ['phone'],
+            function ($item) {
+                $gender = $item['gender'] === \NameGenerator\Gender::GENDER_MALE
+                    ? TeacherEntity::GENDER_MALE
+                    : TeacherEntity::GENDER_FEMALE;
 
-        Console::getInstance()->writeLine($pupilsCount . ' pupils generated in ' . Time::check() . ' sec.');
-
-        $teachers = $nameGenerator->get($teachersCount, ['phone']);
-        foreach ($teachers as $randomTeacher) {
-            $gender = $randomTeacher['gender'] == \NameGenerator\Gender::GENDER_MALE
-                ? \Application\Entity\Teacher::GENDER_MALE
-                : \Application\Entity\Teacher::GENDER_FEMALE;
-
-            /** @var \Application\Entity\Teacher $teacher */
-            $teacher = $teacherTable->getEntity();
-            $teacher
-                ->setName($randomTeacher['first'] . ' ' . $randomTeacher['last'])
-                ->setGender($gender)
-                ->setPhone($randomTeacher['phone']);
-            $teacherTable->insert($teacher);
-        }
-
+                return [
+                    'gender' => $gender,
+                    'name'   => $item['full'],
+                    'phone'  => $item['phone'],
+                ];
+            }
+        );
         Console::getInstance()->writeLine($teachersCount . ' teachers generated in ' . Time::check() . ' sec.');
 
-        $pupilMaxId = $pupilTable->getMaxId();
-        $teacherMaxId = $teacherTable->getMaxId();
+        $pupilMaxId = $pupilService->getMaxId();
+        $teacherMaxId = $teacherService->getMaxId();
 
+        $teacherPupilService = $this->getTeacherPupilService();
         $linksCount = 0;
         for ($teacherId=1; $teacherId<$teacherMaxId; $teacherId++) {
             $except = [];
@@ -86,13 +71,14 @@ class CliController extends AbstractActionController
                 }
                 $except[] = $pupil_id;
 
-                $link = $teacherPupilTable->getEntity();
-                $link->teacher_id = $teacherId;
-                $link->pupil_id = $pupil_id;
-                $teacherPupilTable->insert($link);
+                $teacherPupilService->insert([
+                    'teacher_id' => $teacherId,
+                    'pupil_id' => $pupil_id,
+                ]);
                 $linksCount++;
             }
         }
+
         Console::getInstance()->writeLine($linksCount . ' links generated in ' . Time::check() . ' sec.');
     }
 
@@ -113,6 +99,7 @@ class CliController extends AbstractActionController
                 UNIQUE KEY `name` (`name`),
                 KEY `birthday` (`birthday`)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin",
+
             "DROP TABLE IF EXISTS `teacher`;
             CREATE TABLE `teacher` (
                 `id` int(11) NOT NULL AUTO_INCREMENT,
@@ -120,7 +107,8 @@ class CliController extends AbstractActionController
                 `gender` enum('m','f') COLLATE utf8_bin NOT NULL,
                 `phone` varchar(255) COLLATE utf8_bin NOT NULL,
                 PRIMARY KEY (`id`)
-            ) ENGINE=InnoDB AUTO_INCREMENT=13 DEFAULT CHARSET=utf8 COLLATE=utf8_bin",
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin",
+
             "DROP TABLE IF EXISTS `teacher_pupil`;
             CREATE TABLE `teacher_pupil` (
                 `id` int(11) NOT NULL AUTO_INCREMENT,
@@ -129,11 +117,62 @@ class CliController extends AbstractActionController
                 PRIMARY KEY (`id`),
                 UNIQUE KEY `teacher_id_pupil_id` (`teacher_id`,`pupil_id`),
                 KEY `pupil_id` (`pupil_id`) )
-            ENGINE=InnoDB AUTO_INCREMENT=50 DEFAULT CHARSET=utf8 COLLATE=utf8_bin",
+            ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin",
         ];
 
         foreach ($tables as $sql) {
             $this->getServiceLocator()->get('dbAdapter')->createStatement($sql)->execute();
         }
     }
+
+    /**
+     * @return \Application\Service\Teacher
+     */
+    private function getTeacherService()
+    {
+        return $this->getServiceLocator()->get('TeacherService');
+    }
+
+    /**
+     * @return \Application\Service\Pupil
+     */
+    private function getPupilService()
+    {
+        return $this->getServiceLocator()->get('PupilService');
+    }
+
+    /**
+     * @return \Application\Service\TeacherPupil
+     */
+    private function getTeacherPupilService()
+    {
+        return $this->getServiceLocator()->get('TeacherPupilService');
+    }
+
+    /**
+     * @param $service \App\Service\MysqlStorageble
+     * @param $itemsCount int
+     * @param $additionalFields array
+     * @param $callable callable
+     * @return int
+     * @throws \Exception
+     */
+    private function generateItems($service, $itemsCount, $additionalFields, $callable)
+    {
+        $count = 0;
+        $generator = new \NameGenerator\Generator;
+        while ($count < $itemsCount) {
+            $currentCount = min(self::CHUNK_SIZE, $itemsCount - $count);
+            $items = $generator->get($currentCount, $additionalFields);
+            $items = array_map($callable, $items);
+
+            try{
+                $count += $service->bulkInsert($items);
+            } catch(\Exception $e) {}
+        }
+
+        return $count;
+    }
+
+
 }

@@ -1,10 +1,21 @@
+<?php
+
+/* @var $this Zend\View\Renderer\PhpRenderer */
+
+/* @var $monthName string */
+/* @var $month integer */
+/* @var $items \App\Storage\Mysql\SimpleSet */
+/* @var $paginator \Zend\Paginator\Paginator */
+
+?>
+
 <?php $title = 'Teachers, who has only pupils born in ' . $monthName;?>
 <?php $this->headTitle($title);?>
 <h1><?php echo $title;?></h1>
 
-<?php echo $this->partial('partial/teachers', ['items' => $this->items]);?>
+<?php echo $this->partial('partial/teachers', ['items' => $items]);?>
 
-<?php echo $this->paginationControl($this->paginator, 'Sliding', 'application/teacher/pagination', [
-    'route'=>'teacher_month',
-    'params'=>['month' => $month],
+<?php echo $this->paginationControl($paginator, 'Sliding', 'application/teacher/pagination', [
+    'route' => 'teacher_month',
+    'params' => ['month' => $month],
 ]); ?>

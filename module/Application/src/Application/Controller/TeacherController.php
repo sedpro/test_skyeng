@@ -15,10 +15,11 @@ class TeacherController extends AbstractActionController
      */
     public function indexAction()
     {
+
         $page = (int)$this->params()->fromRoute('page', 1);
         $itemsPerPage = (int)$this->params()->fromRoute('items_per_page');
 
-        $results = $this->getTeacherTable()->getItemsForPaginator($page, $itemsPerPage);
+        $results = $this->getTeacherService()->getItemsForPaginator($page, $itemsPerPage);
         $items = $results['items'];
         $count = $results['count'];
         $pupils = $results['pupils'];
@@ -47,7 +48,7 @@ class TeacherController extends AbstractActionController
         $page = (int)$this->params()->fromRoute('page', 1);
         $itemsPerPage = (int)$this->params()->fromRoute('items_per_page', 10);
 
-        $results = $this->getTeacherTable()->getTeachersOfPupilsBornInMonth($month, $page, $itemsPerPage);
+        $results = $this->getTeacherService()->getTeachersOfPupilsBornInMonth($month, $page, $itemsPerPage);
         $items = $results['items'];
         $count = $results['count'];
 
@@ -59,9 +60,9 @@ class TeacherController extends AbstractActionController
 
         return new ViewModel([
             'paginator' => $paginator,
-            'items' => $items,
+            'items'     => $items,
             'monthName' => strtolower(date("F", mktime(0, 0, 0, $month, 1, 2011))),
-            'month' => $month,
+            'month'     => $month,
         ]);
     }
 
@@ -84,7 +85,7 @@ class TeacherController extends AbstractActionController
             if ($form->isValid()) {
                 $values = $form->getData();
 
-                $this->getTeacherTable()->insertFromForm($values);
+                $this->getTeacherService()->insert($values);
 
                 $this->flashMessenger()->addSuccessMessage('New teacher successfully added.');
 
@@ -104,13 +105,13 @@ class TeacherController extends AbstractActionController
     {
         $id = (int)$this->params()->fromRoute('id');
 
-        $teacher = $this->getTeacherTable()->get($id);
+        $teacher = $this->getTeacherService()->getItem(['id' => $id]);
 
         if (!$teacher) {
             return $this->notFoundAction();
         }
 
-        $pupils = $this->getPupilTable()->getPupilsByTeacherIds($id);
+        $pupils = $this->getPupilService()->getByTeacherIds($id);
 
         return new ViewModel([
             'teacher' => $teacher,
@@ -125,12 +126,9 @@ class TeacherController extends AbstractActionController
      */
     public function maxAction()
     {
-        $teacherTable = $this->getTeacherTable();
-        $teacherIds = $teacherTable->getTeachersWithMostCommonPupils();
-        $teachers = $teacherTable->getByIds($teacherIds);
-
-        $pupils = $this->getPupilTable()
-            ->getCommonPupilsByTeacherIds($teacherIds['first'], $teacherIds['second']);
+        $teacherIds = $this->getTeacherPupilService()->getTeachersWithMostCommonPupils();
+        $teachers = $this->getTeacherService()->getItemsWhere(['id' => [$teacherIds->first, $teacherIds->second]]);
+        $pupils = $this->getPupilService()->getCommonPupilsByTeacherIds($teacherIds->first, $teacherIds->second);
 
         return new ViewModel([
             'teachers' => $teachers,
@@ -159,14 +157,20 @@ class TeacherController extends AbstractActionController
             return new JsonModel(['error' => 'no teacher_id']);
         }
 
-        $teacherPupilTable = $this->getTeacherPupilTable();
+        $teacherPupilService = $this->getTeacherPupilService();
+        $link = $teacherPupilService->getItem([
+            'teacher_id' => $teacher_id,
+            'pupil_id' => $pupil_id,
+        ]);
 
-        $link = $teacherPupilTable->getEntity();
-        $link->teacher_id = $teacher_id;
-        $link->pupil_id = $pupil_id;
-        $teacherPupilTable->insert($link);
+        if (!$link) {
+            $teacherPupilService->insert([
+                'teacher_id' => $teacher_id,
+                'pupil_id' => $pupil_id,
+            ]);
+        }
 
-        $pupil = $this->getPupilTable()->get($pupil_id);
+        $pupil = $this->getPupilService()->getItem(['id' => $pupil_id]);
 
         $html = $this->getPartialView('application/teacher/pupil_item', ['pupil' => $pupil]);
 
@@ -197,11 +201,15 @@ class TeacherController extends AbstractActionController
             return new JsonModel(['error' => 'no teacher_id']);
         }
 
-        $teacherPupilTable = $this->getTeacherPupilTable();
-        $link = $teacherPupilTable->getEntity();
-        $link->teacher_id = $teacher_id;
-        $link->pupil_id = $pupil_id;
-        $teacherPupilTable->delete($link);
+        $teacherPupilService = $this->getTeacherPupilService();
+        $link = $teacherPupilService->getItem([
+            'teacher_id' => $teacher_id,
+            'pupil_id' => $pupil_id,
+        ]);
+
+        if ($link) {
+            $teacherPupilService->delete($link->id);
+        }
 
         return new JsonModel([
             'success' => true,
@@ -227,27 +235,27 @@ class TeacherController extends AbstractActionController
     }
 
     /**
-     * @return \Application\Model\Teacher
+     * @return \Application\Service\Teacher
      */
-    private function getTeacherTable()
+    private function getTeacherService()
     {
-        return $this->getServiceLocator()->get('TeacherTable');
+        return $this->getServiceLocator()->get('TeacherService');
     }
 
     /**
-     * @return \Application\Model\Pupil
+     * @return \Application\Service\Pupil
      */
-    private function getPupilTable()
+    private function getPupilService()
     {
-        return $this->getServiceLocator()->get('PupilTable');
+        return $this->getServiceLocator()->get('PupilService');
     }
 
     /**
-     * @return \Application\Model\TeacherPupil
+     * @return \Application\Service\TeacherPupil
      */
-    private function getTeacherPupilTable()
+    private function getTeacherPupilService()
     {
-        return $this->getServiceLocator()->get('TeacherPupilTable');
+        return $this->getServiceLocator()->get('TeacherPupilService');
     }
 
     /**

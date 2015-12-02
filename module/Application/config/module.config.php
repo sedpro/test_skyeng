@@ -130,19 +130,11 @@ return array(
         ),
     ),
     'service_manager' => [
-        'abstract_factories' => [
-            \Zend\Log\LoggerAbstractServiceFactory::class,
-        ],
         'factories' => array(
-            'DbAdapter' => \Zend\Db\Adapter\AdapterServiceFactory::class,
             'PupilForm' => \Application\Form\PupilFormFactory::class,
             'TeacherForm' => \Application\Form\TeacherFormFactory::class,
             'navigation' => \Zend\Navigation\Service\DefaultNavigationFactory::class,
-
         ),
-        'invokables' => [
-            'tableFactory' => \Application\Model\Factory::class,
-        ],
     ],
     'controllers' => [
         'invokables' => [
@@ -150,11 +142,6 @@ return array(
             'Application\Controller\Cli' => Controller\CliController::class,
             'Application\Controller\Pupil' => Controller\PupilController::class,
             'Application\Controller\Teacher' => Controller\TeacherController::class,
-        ],
-    ],
-    'view_helpers' => [
-        'invokables' => [
-            'showMessages' => \Application\View\Helper\ShowMessages::class,
         ],
     ],
     'navigation' => [

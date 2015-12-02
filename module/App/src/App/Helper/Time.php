@@ -1,6 +1,6 @@
 <?php
 
-namespace Application\Helper;
+namespace App\Helper;
 
 class Time
 {
